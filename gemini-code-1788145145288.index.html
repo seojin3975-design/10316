@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>조각투자 키우기 - 갓물주 되기 프로젝트</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card-bg: #161b22;
+      --panel: #21262d;
+      --border: #30363d;
+      --text: #f0f6fc;
+      --sub-text: #8b949e;
+      --primary: #58a6ff;
+      --up: #ff7b72;
+      --down: #79c0ff;
+      --green: #3fb950;
+      --gold: #d29922;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; }
+    body { background-color: var(--bg); color: var(--text); display: flex; justify-content: center; min-height: 100vh; }
+
+    .app-shell {
+      width: 100%; max-width: 480px; min-height: 100vh; background: var(--bg);
+      border-left: 1px solid var(--border); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; position: relative;
+    }
+
+    header {
+      padding: 14px 18px; background: rgba(22, 27, 34, 0.9); backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 20;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .logo { font-size: 16px; font-weight: 800; color: var(--primary); }
+    .badge-group { display: flex; gap: 6px; }
+    .badge { font-size: 11px; background: var(--panel); border: 1px solid var(--border); padding: 3px 8px; border-radius: 12px; font-weight: 700; color: var(--gold); }
+
+    .content { flex: 1; padding: 16px; padding-bottom: 80px; overflow-y: auto; }
+
+    /* 뉴스 전광판 */
+    .news-box {
+      background: linear-gradient(135deg, #1f242d 0%, #0d1117 100%);
+      border: 1px solid var(--gold); border-radius: 12px; padding: 12px;
+      margin-bottom: 12px; font-size: 13px; display: flex; gap: 8px; align-items: center;
+      box-shadow: 0 0 10px rgba(210, 153, 34, 0.15);
+    }
+
+    /* 알바 및 진행 버튼 */
+    .action-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; margin-bottom: 16px; }
+    .work-btn {
+      background: var(--panel); border: 1px solid var(--border); color: var(--text);
+      border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+    .month-btn {
+      background: linear-gradient(135deg, #238636, #2ea043);
+      color: white; border: none; padding: 14px; border-radius: 12px;
+      font-size: 14px; font-weight: 800; cursor: pointer;
+      box-shadow: 0 4px 12px rgba(46, 160, 67, 0.3);
+    }
+    .month-btn:active, .work-btn:active { transform: scale(0.97); }
+
+    .summary-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 16px; padding: 16px; margin-bottom: 16px;
+    }
+    .summary-label { font-size: 11px; color: var(--sub-text); }
+    .summary-val { font-size: 24px; font-weight: 800; margin: 2px 0 10px 0; color: var(--gold); }
+    .summary-row { display: flex; justify-content: space-between; font-size: 12px; padding-top: 6px; border-top: 1px dashed var(--border); }
+
+    .asset-item {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 14px; padding: 12px 14px; margin-bottom: 10px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .asset-left { display: flex; gap: 10px; align-items: center; }
+    .asset-icon { width: 40px; height: 40px; background: var(--panel); border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 18px; border: 1px solid var(--border); }
+    .asset-ticker { font-size: 10px; font-weight: 700; color: var(--primary); background: rgba(88, 166, 255, 0.15); padding: 2px 5px; border-radius: 4px; }
+    .asset-name { font-size: 13px; font-weight: 700; margin-top: 2px; }
+    .asset-right { text-align: right; }
+    .asset-price { font-size: 13px; font-weight: 700; }
+    .asset-rate { font-size: 11px; font-weight: 700; margin-top: 1px; }
+    .up { color: var(--up); }
+    .down { color: var(--down); }
+
+    .btn-trade { padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; margin-left: 6px; }
+    .btn-buy-sm { background: var(--up); color: white; }
+    .btn-sell-sm { background: var(--down); color: white; }
+
+    .bottom-nav {
+      position: fixed; bottom: 0; width: 100%; max-width: 480px; height: 60px;
+      background: var(--card-bg); border-top: 1px solid var(--border);
+      display: grid; grid-template-columns: repeat(3, 1fr); z-index: 20;
+    }
+    .nav-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--sub-text); font-size: 11px; gap: 3px; cursor: pointer; border: none; background: none; }
+    .nav-btn.active { color: var(--primary); font-weight: 700; }
+
+    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: flex-end; z-index: 100; }
+    .modal.active { display: flex; }
+    .modal-sheet { width: 100%; max-width: 480px; background: var(--card-bg); border-radius: 20px 20px 0 0; padding: 20px; border-top: 1px solid var(--border); }
+
+    .input-box { width: 100%; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px; color: white; font-size: 16px; font-weight: 700; text-align: right; margin-bottom: 12px; }
+    .toast { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #000; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 800; display: none; z-index: 200; box-shadow: 0 4px 12px rgba(0,0,0,0.5); width: 85%; text-align: center; }
+  </style>
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="toast" class="toast">알림</div>
+
+  <header>
+    <div class="logo">조각투자 키우기</div>
+    <div class="badge-group">
+      <div class="badge" id="rank-badge">🐣 흙수저</div>
+      <div class="badge" id="month-badge" style="color:var(--primary);">1개월차</div>
+    </div>
+  </header>
+
+  <div class="content">
+    <!-- 뉴스 속보 전광판 -->
+    <div class="news-box">
+      <span>📰</span>
+      <div id="news-text" style="font-weight: 600;">[속보] 시장이 평화롭습니다. 투자 종목을 찾아보세요!</div>
+    </div>
+
+    <!-- 액션 버튼 -->
+    <div class="action-grid">
+      <button class="work-btn" onclick="doPartTimeJob()">🧹 알바하기<br><span style="font-size:10px; color:var(--gold);">+5,000원</span></button>
+      <button class="month-btn" onclick="passOneMonth()">🚀 1개월 지나기 (시세 폭등/폭락)</button>
+    </div>
+
+    <!-- 내 자산 요약 -->
+    <div class="summary-card">
+      <div class="summary-label">내 총 자산 (목표: 1,000,000원)</div>
+      <div class="summary-val" id="total-asset-val">100,000 원</div>
+      <div class="summary-row">
+        <span>현금 (투자 가능)</span>
+        <span id="cash-val" style="color: var(--green); font-weight: 700;">100,000 원</span>
+      </div>
+      <div class="summary-row" style="margin-top: 4px;">
+        <span>평가 손익</span>
+        <span id="profit-val" style="font-weight: 700;">0원 (0.00%)</span>
+      </div>
+      <div class="summary-row" style="margin-top: 4px; border: none; padding-top: 0;">
+        <span>월 배당 수익</span>
+        <span id="last-div-val" style="color: var(--gold); font-weight: 700;">+0 원</span>
+      </div>
+    </div>
+
+    <!-- 탭 1: 시장 탐색 -->
+    <div id="tab-market" class="tab-pane">
+      <div id="market-list"></div>
+    </div>
+
+    <!-- 탭 2: 내 보유 자산 (매도 기능) -->
+    <div id="tab-portfolio" class="tab-pane" style="display: none;">
+      <div id="portfolio-list"></div>
+    </div>
+
+    <!-- 탭 3: 리셋 설정 -->
+    <div id="tab-account" class="tab-pane" style="display: none;">
+      <div style="background: var(--card-bg); padding: 20px; border-radius: 16px; border: 1px solid var(--border); text-align: center;">
+        <p style="font-size: 12px; color: var(--sub-text); margin-bottom: 12px;">파산했거나 다시 시작하고 싶다면?</p>
+        <button onclick="resetData()" style="background: var(--up); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;">10만 원으로 파산 신청(초기화)</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="nav-btn active" onclick="switchTab('market', this)"><span>📊</span> 종목 거래</button>
+    <button class="nav-btn" onclick="switchTab('portfolio', this)"><span>💼</span> 내 포트폴리오</button>
+    <button class="nav-btn" onclick="switchTab('account', this)"><span>⚙️</span> 설정</button>
+  </div>
+</div>
+
+<!-- 매수/매도 모달 -->
+<div id="modal" class="modal" onclick="closeModal(event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+      <div>
+        <span id="m-ticker" class="asset-ticker">BUILD-001</span>
+        <div id="m-name" style="font-size: 15px; font-weight: 700; margin-top: 2px;">종목명</div>
+      </div>
+      <button style="background: none; border: none; color: white; font-size: 18px; cursor: pointer;" onclick="closeModal()">✕</button>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 10px; background: var(--panel); padding: 10px; border-radius: 8px;">
+      <span style="color: var(--sub-text);">현재 1조각 가격</span>
+      <span id="m-price" style="font-weight: 700;">5,000원</span>
+    </div>
+
+    <div style="font-size: 11px; color: var(--sub-text); margin-bottom: 4px;">수량 입력</div>
+    <input type="number" id="trade-qty" class="input-box" value="1" min="1" oninput="updateTradeCalc()">
+
+    <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; margin-bottom: 12px;">
+      <span>총 금액</span>
+      <span id="m-total-price" style="color: var(--primary);">5,000 원</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+      <button style="background: var(--up); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer;" onclick="executeTrade('BUY')">매수하기</button>
+      <button style="background: var(--down); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer;" onclick="executeTrade('SELL')">매도하기(팔기)</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 랜덤 뉴스 이벤트 모음 (떡상 / 폭락 스토리)
+  const newsEvents = [
+    { text: "K-POP 음원 숏폼 챌린지 대박! 🎵 음원 IP 떡상 중!", target: 'KPOP-001', rate: 35 },
+    { text: "성수동 카페 건물에 톱스타 방문! ☕ 성수동 시세 폭등!", target: 'BUILD-002', rate: 25 },
+    { text: "강남 빌딩에 고액 월세 유튜버 대거 입주! 🏢 건물 가격 상승!", target: 'BUILD-001', rate: 20 },
+    { text: "유명 미술품 위작 논란 발생! 🎨 미술품 가격 급락!", target: 'ART-001', rate: -30 },
+    { text: "음원 저작권 분쟁 발생! 🎵 음원 IP 가격 하락!", target: 'KPOP-001', rate: -20 },
+    { text: "금리 인하 발표! 부동산 조각 자산 전반적으로 강세!", target: 'ALL', rate: 15 },
+    { text: "경기 침체 우려로 대체 자산 전체적인 조정세!", target: 'ALL', rate: -10 }
+  ];
+
+  let state = {
+    month: 1,
+    cash: 100000,
+    lastDividend: 0,
+    assets: [
+      { ticker: 'BUILD-001', name: '강남 빌딩 조각', icon: '🏢', price: 5000, divRate: 2.5, lastChange: 0 },
+      { ticker: 'KPOP-001', name: 'K-POP 음원 IP', icon: '🎵', price: 2000, divRate: 4.0, lastChange: 0 },
+      { ticker: 'ART-001', name: '유명 미술품 조각', icon: '🎨', price: 10000, divRate: 0.0, lastChange: 0 },
+      { ticker: 'BUILD-002', name: '성수동 카페 건물', icon: '☕', price: 3000, divRate: 3.0, lastChange: 0 }
+    ],
+    holdings: {}
+  };
+
+  let selectedTicker = null;
+
+  function loadData() {
+    const saved = localStorage.getItem('nexus_sto_game_data');
+    if (saved) state = JSON.parse(saved);
+    updateUI();
+  }
+
+  function saveData() {
+    localStorage.setItem('nexus_sto_game_data', JSON.stringify(state));
+    updateUI();
+  }
+
+  function resetData() {
+    localStorage.removeItem('nexus_sto_game_data');
+    location.reload();
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.innerText = msg; t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 2500);
+  }
+
+  // 알바해서 돈 벌기
+  function doPartTimeJob() {
+    state.cash += 5000;
+    saveData();
+    showToast('🧹 편의점 알바 완료! +5,000원 획득!');
+  }
+
+  // 1개월 진행 (뉴스 + 시세 폭등폭락 + 배당금)
+  function passOneMonth() {
+    state.month += 1;
+
+    // 1. 뉴스 뽑기
+    const randomNews = newsEvents[Math.floor(Math.random() * newsEvents.length)];
+    document.getElementById('news-text').innerText = `[속보] ${randomNews.text}`;
+
+    // 2. 시세 변동 계산 (뉴스 여파 반영)
+    state.assets.forEach(asset => {
+      let baseRate = (Math.random() * 20 - 10); // 기본 -10% ~ +10%
+      if (randomNews.target === 'ALL' || randomNews.target === asset.ticker) {
+        baseRate += randomNews.rate;
+      }
+      baseRate = parseFloat(baseRate.toFixed(1));
+      asset.lastChange = baseRate;
+      asset.price = Math.max(500, Math.round(asset.price * (1 + baseRate / 100)));
+    });
+
+    // 3. 월 배당금 계산
+    let totalDiv = 0;
+    Object.keys(state.holdings).forEach(ticker => {
+      const h = state.holdings[ticker];
+      const asset = state.assets.find(a => a.ticker === ticker);
+      if (asset && h.qty > 0) {
+        const div = Math.round(h.qty * asset.price * (asset.divRate / 100 / 12));
+        totalDiv += div;
+      }
+    });
+
+    state.cash += totalDiv;
+    state.lastDividend = totalDiv;
+
+    saveData();
+    showToast(`📅 ${state.month}개월차! 시세 변동 완료 (배당금 +${totalDiv.toLocaleString()}원)`);
+  }
+
+  function getRank(total) {
+    if (total >= 1000000) return '👑 갓물주';
+    if (total >= 500000) return '🏢 건물주 지망생';
+    if (total >= 200000) return '💳 소액 투자자';
+    return '🐣 흙수저';
+  }
+
+  function updateUI() {
+    document.getElementById('month-badge').innerText = `${state.month}개월차`;
+    document.getElementById('cash-val').innerText = state.cash.toLocaleString() + ' 원';
+    document.getElementById('last-div-val').innerText = '+' + state.lastDividend.toLocaleString() + ' 원';
+
+    let holdingsEvalSum = 0;
+    let holdingsCostSum = 0;
+
+    Object.keys(state.holdings).forEach(ticker => {
+      const h = state.holdings[ticker];
+      const asset = state.assets.find(a => a.ticker === ticker);
+      if (asset && h.qty > 0) {
+        holdingsEvalSum += h.qty * asset.price;
+        holdingsCostSum += h.qty * h.avgPrice;
+      }
+    });
+
+    const totalAsset = state.cash + holdingsEvalSum;
+    const profit = holdingsEvalSum - holdingsCostSum;
+    const profitRate = holdingsCostSum > 0 ? ((profit / holdingsCostSum) * 100).toFixed(2) : '0.00';
+
+    document.getElementById('total-asset-val').innerText = totalAsset.toLocaleString() + ' 원';
+    document.getElementById('rank-badge').innerText = getRank(totalAsset);
+
+    const profitEl = document.getElementById('profit-val');
+    const sign = profit >= 0 ? '+' : '';
+    profitEl.innerText = `${sign}${profit.toLocaleString()}원 (${sign}${profitRate}%)`;
+    profitEl.className = profit >= 0 ? 'up' : 'down';
+
+    renderMarket();
+    renderPortfolio();
+  }
+
+  function renderMarket() {
+    const list = document.getElementById('market-list');
+    list.innerHTML = state.assets.map(a => `
+      <div class="asset-item" onclick="openModal('${a.ticker}')">
+        <div class="asset-left">
+          <div class="asset-icon">${a.icon}</div>
+          <div>
+            <span class="asset-ticker">${a.ticker}</span>
+            <div class="asset-name">${a.name}</div>
+          </div>
+        </div>
+        <div class="asset-right" style="display:flex; align-items:center;">
+          <div>
+            <div class="asset-price">${a.price.toLocaleString()}원</div>
+            <div class="asset-rate ${a.lastChange >= 0 ? 'up' : 'down'}">${a.lastChange >= 0 ? '+' : ''}${a.lastChange}%</div>
+          </div>
+          <button class="btn-trade btn-buy-sm">거래</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderPortfolio() {
+    const list = document.getElementById('portfolio-list');
+    const keys = Object.keys(state.holdings).filter(k => state.holdings[k].qty > 0);
+
+    if (keys.length === 0) {
+      list.innerHTML = '<div style="text-align:center; color:var(--sub-text); padding: 40px 0;">보유 중인 조각이 없습니다.</div>';
+      return;
+    }
+
+    list.innerHTML = keys.map(ticker => {
+      const h = state.holdings[ticker];
+      const a = state.assets.find(item => item.ticker === ticker);
+      const evalVal = h.qty * a.price;
+      const profit = evalVal - (h.qty * h.avgPrice);
+
+      return `
+        <div class="asset-item" onclick="openModal('${a.ticker}')">
+          <div class="asset-left">
+            <div class="asset-icon">${a.icon}</div>
+            <div>
+              <span class="asset-ticker">${a.ticker}</span>
+              <div class="asset-name">${a.name}</div>
+              <div style="font-size:10px; color:var(--sub-text);">${h.qty}조각 (평단: ${h.avgPrice.toLocaleString()}원)</div>
+            </div>
+          </div>
+          <div class="asset-right">
+            <div class="asset-price">${evalVal.toLocaleString()}원</div>
+            <div class="asset-rate ${profit >= 0 ? 'up' : 'down'}">${profit >= 0 ? '+' : ''}${profit.toLocaleString()}원</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function openModal(ticker) {
+    selectedTicker = ticker;
+    const a = state.assets.find(item => item.ticker === ticker);
+    document.getElementById('m-ticker').innerText = a.ticker;
+    document.getElementById('m-name').innerText = a.name;
+    document.getElementById('m-price').innerText = a.price.toLocaleString() + '원';
+    document.getElementById('trade-qty').value = 1;
+    updateTradeCalc();
+    document.getElementById('modal').classList.add('active');
+  }
+
+  function closeModal(e) {
+    if (!e || e.target.id === 'modal' || e.target.tagName === 'BUTTON') {
+      document.getElementById('modal').classList.remove('active');
+    }
+  }
+
+  function updateTradeCalc() {
+    const a = state.assets.find(item => item.ticker === selectedTicker);
+    const qty = Number(document.getElementById('trade-qty').value || 1);
+    document.getElementById('m-total-price').innerText = (a.price * qty).toLocaleString() + ' 원';
+  }
+
+  // 매수 및 매도(팔기) 통합 처리
+  function executeTrade(type) {
+    const qty = Number(document.getElementById('trade-qty').value || 0);
+    const a = state.assets.find(item => item.ticker === selectedTicker);
+    const totalAmount = a.price * qty;
+
+    if (qty <= 0) return showToast('수량을 입력하세요.');
+
+    if (!state.holdings[a.ticker]) {
+      state.holdings[a.ticker] = { qty: 0, avgPrice: 0 };
+    }
+    const currentHold = state.holdings[a.ticker];
+
+    if (type === 'BUY') {
+      if (totalAmount > state.cash) return showToast('현금이 부족해!');
+      state.cash -= totalAmount;
+      const newQty = currentHold.qty + qty;
+      currentHold.avgPrice = Math.round(((currentHold.qty * currentHold.avgPrice) + totalAmount) / newQty);
+      currentHold.qty = newQty;
+      showToast(`${a.name} ${qty}조각 매수 완료!`);
+    } else if (type === 'SELL') {
+      if (currentHold.qty < qty) return showToast('보유 수량보다 많이 팔 수 없어!');
+      state.cash += totalAmount;
+      currentHold.qty -= qty;
+      showToast(`${a.name} ${qty}조각 매도(익절/손절) 완료!`);
+    }
+
+    saveData();
+    closeModal();
+  }
+
+  function switchTab(tabId, el) {
+    document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+    document.getElementById(`tab-${tabId}`).style.display = 'block';
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  loadData();
+</script>
+</body>
+</html>
